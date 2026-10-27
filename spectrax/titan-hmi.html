@@ -1,0 +1,375 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>SpectraX — AI Powered EV Journeys</title><link rel="icon" href="static/spectrax-mark.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>/* OPTIONAL Mapbox public token (satellite). In a Vite port this is VITE_MAP_API_KEY. Never commit a private key. */window.TITAN_CONFIG={MAP_KEY:""};</script>
+<style>
+:root{--bg:#080B0D;--p:#101518;--e:#151B1F;--b:#263137;--t:#00E5C7;--o:#FF7A18;--w:#FFC857;--r:#FF453A;--tx:#F2F5F6;--t2:#9AA8AE;--t3:#5D6B71;--m:'JetBrains Mono',ui-monospace,monospace;box-sizing:border-box}
+*{box-sizing:border-box;margin:0}html,body{height:100%;background:#080B0D}
+body{color:var(--tx);font:13px Inter,system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);display:grid;grid-template-rows:42px 1fr 52px;overflow:hidden}
+.m{font-family:var(--m)}.l{font-size:10px;letter-spacing:.12em;color:var(--t3);text-transform:uppercase}
+button{font:inherit;color:var(--tx);background:var(--e);border:1px solid var(--b);padding:6px 10px;cursor:pointer;border-radius:3px;letter-spacing:.06em;font-size:11px}
+button:hover{border-color:var(--t)}button.on{border-color:var(--t);color:var(--t);background:#0b2a28}button.pri{background:var(--t);color:#001a17;border-color:var(--t);font-weight:600}
+button.dg{border-color:var(--r);color:var(--r)}
+#top{display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--b);background:var(--p);position:relative}
+#top b{letter-spacing:.3em;font-size:14px}#top small{display:block;font-size:8px;letter-spacing:.2em;color:var(--t3)}
+.pill{font:11px var(--m);color:var(--t);margin-left:14px;cursor:pointer}.pill.off{color:var(--t3)}
+#main{display:grid;grid-template-columns:220px 1fr 330px;min-height:0}
+.pan{background:var(--p);padding:12px;overflow:auto;border-right:1px solid var(--b)}#rp{border-right:0;border-left:1px solid var(--b)}
+.blk{border-bottom:1px solid var(--b);padding:9px 0}.big{font:500 30px var(--m)}.u{font-size:11px;color:var(--t2)}
+#bat{height:14px;border:1px solid var(--b);margin:6px 0;padding:1px}#bf{height:100%;background:var(--t);transition:width .4s,background .4s}
+#mid{position:relative;min-width:0;overflow:auto;background:var(--bg);isolation:isolate}
+#hdr{position:absolute;top:0;left:0;z-index:600;pointer-events:none;padding:10px 40px 14px 14px;background:linear-gradient(#080b0dd9,#080b0d00);text-shadow:0 1px 3px #000}
+#hdr h2{font:500 17px Inter;letter-spacing:.08em}
+svg text{font-family:Inter;fill:#7d8b91;font-size:11px}
+#nav{display:flex;border-top:1px solid var(--b);background:var(--p)}
+#nav button{flex:1;border:0;border-radius:0;height:100%;background:none;color:var(--t2)}#nav button.on{color:var(--t);box-shadow:inset 0 2px var(--t)}
+.card{background:var(--e);border:1px solid var(--b);padding:10px;margin:8px 0;border-left:3px solid var(--t)}.card.o{border-left-color:var(--o)}.card.r{border-left-color:var(--r)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+#log{font:10.5px/1.6 var(--m);color:var(--t2);max-height:150px;overflow:hidden}#log div{animation:in .3s}#log .k{color:var(--o)}
+@keyframes in{from{opacity:0;transform:translateY(-4px)}}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--t);margin-right:6px}
+.tab{padding:60px 18px 18px}.tab h3{font-size:11px;letter-spacing:.14em;color:var(--t2);margin:14px 0 6px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+table{width:100%;border-collapse:collapse}td{padding:5px 4px;border-bottom:1px solid var(--b)}
+#dr{position:fixed;right:0;top:42px;bottom:52px;width:310px;background:var(--p);border-left:1px solid var(--t);padding:12px;overflow:auto;transform:translateX(105%);transition:transform .25s;z-index:5}#dr.open{transform:none}
+#dr .seg{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 10px}input[type=range]{width:100%;accent-color:#00E5C7}
+#diag{position:absolute;right:14px;top:44px;background:var(--e);border:1px solid var(--b);padding:10px;z-index:6;display:none;font:11px/1.8 var(--m)}
+#emg{position:fixed;inset:0;background:rgba(40,0,0,.94);z-index:9;display:none;padding:7vh 8vw;overflow:auto;border:3px solid var(--r)}
+#ban{position:absolute;bottom:22px;left:10px;z-index:600;font:10px/1.5 var(--m);color:var(--w);text-shadow:0 1px 3px #000;max-width:60%}
+#mw{position:absolute;inset:0}#lm{position:absolute;inset:0;background:#0a0e10}#tc{display:none}
+.dim .leaflet-tile-pane{filter:brightness(.62) saturate(.7) contrast(1.05)}.leaflet-container{font:inherit}
+.flow{animation:fl 1.1s linear infinite}.paused .flow{animation-play-state:paused}@keyframes fl{to{stroke-dashoffset:-17}}
+#mc,#mz{position:absolute;right:10px;z-index:600;display:flex;flex-direction:column;gap:4px;align-items:flex-end}#mc{top:10px}#mz{bottom:96px}
+#mc button,#mz button,#mc select{background:#101518e6;font:10px var(--m);padding:5px 8px;color:var(--tx);border:1px solid var(--b);border-radius:3px}#mc button.on{background:#0b2a28;border-color:var(--t);color:var(--t)}
+.cm{width:24px;height:24px;border-radius:50%;background:#0a0e10;border:2px solid;display:grid;place-items:center;font-size:12px}.cm.t{border-color:#00E5C7;color:#00E5C7}.cm.w{border-color:#FFC857;color:#FFC857}.cm.r{border-color:#FF453A;color:#FF453A}.cm.sel{transform:scale(1.4);box-shadow:0 0 14px currentColor}
+.tag{position:absolute;transform:translate(-50%,-130%);font:10px var(--m);background:#101518e6;border:1px solid;padding:2px 6px;white-space:nowrap}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--e);color:var(--tx);border:1px solid var(--t);border-radius:3px}.leaflet-popup-content{margin:10px;min-width:190px}
+.leaflet-control-zoom a{background:#101518e6!important;color:var(--t2)!important;border-color:var(--b)!important}
+body.fs #main{grid-template-columns:1fr}body.fs #lp,body.fs #rp{display:none}
+@media(max-width:900px){#main{grid-template-columns:1fr}.pan{display:none}}
+
+:root{--bg:#0a1014;--p:#111b21;--e:#16232a;--b:#2a3b44;--t2:#a9b8bf;--t3:#7a8c94}
+html,body{background:radial-gradient(120% 90% at 50% 0,#0f1a20,#070b0e)}
+body{font-size:14px;grid-template-rows:48px 1fr 66px}#top{background:none;border:0;padding:0 18px}#top b{font-size:15px}.pill{padding:8px 2px}
+#main{grid-template-columns:260px 1fr 350px;gap:12px;padding:0 12px}
+.pan{border:1px solid var(--b);border-radius:18px;background:linear-gradient(#131e25,#0f181d);padding:14px}
+#mid{border-radius:18px;border:1px solid var(--b)}.tab{padding:18px}
+#nav{background:none;border:0;gap:8px;padding:6px 12px 10px}#nav button{border-radius:14px;font-size:13px;letter-spacing:.1em;border:1px solid var(--b);background:var(--p);color:var(--t2)}#nav button.on{background:#0d3834;box-shadow:none;border-color:var(--t);color:var(--t)}
+button{min-height:40px;border-radius:12px;font-size:12px}button.sec{background:transparent}button.pri{background:var(--t)}
+button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--t);outline-offset:2px}
+.hero{background:var(--e);border:1px solid var(--b);border-radius:14px;padding:12px}.big{font-size:48px;line-height:1}.big small{font-size:18px;color:var(--t2)}.mid{font:500 26px var(--m)}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0}.g3>div{background:var(--e);border:1px solid var(--b);border-radius:12px;padding:8px}.n{font-size:20px}
+details{margin:8px 0}summary{cursor:pointer;min-height:40px;display:flex;align-items:center;color:var(--t2);font-size:11px;letter-spacing:.1em}
+.card{border-radius:14px;padding:12px}.card p{margin:6px 0 10px;font-size:15px;line-height:1.35}ul{margin:4px 0 10px 16px;color:var(--t2);line-height:1.5}
+.cc{background:var(--e);border:1px solid var(--b);border-radius:14px;padding:10px;margin:8px 0;display:grid;gap:5px}.cc.sel{border-color:var(--t)}.cc.bad{border-color:var(--r)}.rd{color:var(--r)}.cc .row button{flex:1}
+#hdr{top:12px;left:12px;padding:12px 14px;background:#0f181df0;border:1px solid var(--b);border-radius:14px;text-shadow:none;pointer-events:auto;max-width:48%}#hdr h2{font-size:18px}#mr{display:flex;flex-wrap:wrap;gap:6px}#hx{display:none;gap:12px;margin-top:8px}
+#mc{top:12px;right:12px;flex-direction:row}#ml{position:absolute;left:12px;bottom:48px;z-index:600;display:flex;gap:6px;flex-wrap:wrap;max-width:62%}
+#mc button,#mc select,#ml button,#mr button,#mz button{background:#0f181df0;font:12px var(--m);padding:8px 12px;min-height:40px;color:var(--tx);border:1px solid var(--b);border-radius:12px}#mc select{font:12px var(--m)}
+#mc button.on,#ml button.on,#mr button.on{background:#0b2a28;border-color:var(--t);color:var(--t)}#ban{bottom:8px;max-width:50%}
+.cm{width:30px;height:30px;font-size:15px}.leaflet-control-zoom a{width:40px!important;height:40px!important;line-height:40px!important;font-size:20px}
+body.fs #hx{display:flex}#dr{top:48px;bottom:66px}
+@media(max-width:1180px){#main{grid-template-columns:1fr 320px}#lp{display:none}#rp{display:block}#hx{display:flex}}
+@media(max-width:780px){body{overflow:auto}#main{grid-template-columns:1fr;grid-template-rows:minmax(420px,60vh) auto;overflow:auto}#hdr{max-width:calc(100% - 24px)}#mc{top:auto;bottom:48px;right:12px}#ml{bottom:92px}}
+@media(prefers-reduced-motion:reduce){.flow{animation:none}*{transition:none!important}}
+#top b{letter-spacing:.06em;font-size:18px}
+#sb{position:absolute;top:64px;right:12px;width:min(340px,calc(100% - 24px));z-index:700}#q{width:100%;min-height:44px;border-radius:12px;border:1px solid var(--b);background:#0f181df0;color:var(--tx);padding:0 14px;font:14px Inter,sans-serif}
+#qs{background:#0f181d;border:1px solid var(--b);border-radius:12px;margin-top:4px;overflow:hidden}#qs:empty{display:none}#qs button{display:block;width:100%;text-align:left;border:0;border-radius:0;min-height:48px;background:none;padding:8px 14px;font:13px Inter,sans-serif}#qs button small{display:block;color:var(--t3);font-size:11px}#qs button:hover,#qs button:focus-visible{background:#16323a}
+#hdr{width:min(380px,calc(100% - 24px));max-width:none;padding:12px}
+.rtrow{display:flex;align-items:center;gap:8px}.rtrow input{flex:1;min-width:0;min-height:44px;border-radius:12px;border:1px solid var(--b);background:#0b1317;color:var(--tx);padding:0 12px;font:14px Inter,sans-serif}.ib{width:44px;padding:0;font-size:18px}
+.pt{width:12px;height:12px;border-radius:50%;flex:none}.pt.f{background:#2f8cff;box-shadow:0 0 0 4px #2f8cff33}.pt.t{background:var(--o);box-shadow:0 0 0 4px #ff7a1833}.conn{width:2px;height:14px;margin:2px 5px;background:repeating-linear-gradient(#5d6b71 0 3px,transparent 3px 6px)}
+#qs{background:#0f181d;border:1px solid var(--b);border-radius:12px;margin-top:4px;overflow:hidden}#qs:empty{display:none}#qs button{display:block;width:100%;text-align:left;border:0;border-radius:0;min-height:48px;background:none;padding:8px 14px;font:13px Inter,sans-serif}#qs button small{display:block;color:var(--t3);font-size:11px}#qs button:hover,#qs button:focus-visible{background:#16323a}
+body.nr #rsum{display:none}#mc{top:12px;right:12px;flex-direction:column}#mc button.go{background:var(--t);color:#001a17;border-color:var(--t);font-weight:600;min-height:48px;padding:8px 18px;font-size:14px}#mc button:disabled{opacity:.4;cursor:not-allowed}
+#tb{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:650;display:none;align-items:center;gap:16px;background:#0b2a28f8;border:1px solid var(--t);border-radius:18px;padding:12px 22px;min-width:min(420px,92%)}#tbi{font-size:48px;color:var(--t);line-height:1}#tbd{font:600 32px var(--m)}#tbn{font-size:16px;color:var(--t2)}
+#nb{position:absolute;left:12px;right:12px;bottom:12px;z-index:650;display:none;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#0f181df8;border:1px solid var(--b);border-radius:18px;padding:10px 14px}.nbs{display:flex;gap:20px;flex-wrap:wrap}.nbs b{font-size:19px}.nbb{display:flex;gap:8px}
+body.nav #nb{display:flex}body.nav #lp,body.nav #rp,body.nav #hdr,body.nav #mc,body.nav #ml,body.nav #ban{display:none}body.nav #main{grid-template-columns:1fr}body.nav .leaflet-bottom{bottom:84px}body.nav #mz{bottom:108px}body.nav #cd{top:96px;bottom:100px}
+#cd{position:absolute;right:12px;top:124px;bottom:150px;width:min(380px,calc(100% - 24px));z-index:760;background:#0f181df8;border:1px solid var(--b);border-radius:16px;display:none;flex-direction:column}#cd.open{display:flex}
+#cm{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}.bub{padding:9px 12px;border-radius:12px;max-width:92%;line-height:1.4;font-size:14px;white-space:pre-wrap}.bub.u{align-self:flex-end;background:#0d3834}.bub.a{background:var(--e)}.bub.bad{color:var(--w)}.bub .st{font:10px var(--m);color:var(--t3);margin-top:6px}
+#cf{display:flex;gap:6px;padding:10px;border-top:1px solid var(--b)}#ci{flex:1;min-width:0;min-height:44px;border-radius:12px;border:1px solid var(--b);background:#0b1317;color:var(--tx);padding:0 12px;font:14px Inter,sans-serif}
+.chk{list-style:none;margin:0 0 8px;padding:0}.chk li{display:grid;grid-template-columns:18px 1fr;gap:2px 8px;padding:5px 0;font-size:13px;animation:rowin .3s both}.chk li em{grid-column:2;font:11px var(--m);color:var(--t3);font-style:normal}
+.sp{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--t3);border-top-color:var(--t);animation:spin .8s linear infinite}li.ok .sp,li.bd .sp,li.wr .sp{animation:none;border:0;width:auto;height:auto}li.ok .sp::before{content:'✓';color:var(--t)}li.bd .sp::before{content:'✕';color:var(--r)}li.wr .sp::before{content:'!';color:var(--w)}
+.verdict{display:inline-block;font:600 12px var(--m);letter-spacing:.12em;padding:4px 10px;border-radius:99px;background:#0d3834;color:var(--t)}.verdict.caution{background:#3a2a0c;color:var(--w)}.verdict.avoid{background:#3a0f0c;color:var(--r)}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes rowin{from{opacity:0;transform:translateY(6px)}}@keyframes pop{from{opacity:0;transform:scale(.7)}}
+@media(max-width:780px){#hdr{width:calc(100% - 24px)}#mc{top:auto;bottom:100px;flex-direction:row}#cd{top:auto;bottom:150px;height:50%}}
+.ki{min-height:42px;border-radius:10px;border:1px solid var(--b);background:#0b1317;color:var(--tx);padding:0 12px;font:13px var(--m)}
+</style></head><body>
+<div id="top"><div class="row" style="gap:10px"><img src="static/spectrax-mark.png" alt="" width="36" height="36" style="border-radius:8px"><div><b>Spectra<span style="color:#2f8cff">X</span></b><small>AI POWERED EV JOURNEYS</small></div></div><div id="js" class="m" style="letter-spacing:.2em"></div>
+<div class="row"><span id="clk" class="m"></span><span class="pill" data-a="diag" id="p1">LTE</span><span class="pill" data-a="diag" id="p2">GPS</span><span class="pill" data-a="diag" id="p3">VEHICLE LINK</span><button data-a="drawer" style="margin-left:14px">⚙ DEMO SIM</button></div>
+<div id="diag"></div></div>
+<div id="main">
+<div class="pan" id="lp" aria-label="Vehicle status"><div class="hero"><div class="l">Battery · simulated</div><div class="row" style="align-items:flex-end"><div class="big"><span id="soc"></span><small>%</small></div><div style="text-align:right"><div class="l">Range</div><b class="mid"><span id="rg2"></span><small class="u"> km</small></b></div></div><div id="bat"><div id="bf"></div></div><div class="row m u"><span>ARRIVAL <b id="ar2c" style="color:var(--tx)"><span id="ar2"></span>%</b></span><span id="rgs"></span></div></div>
+<div class="g3"><div><div class="l">Speed</div><b class="m n" id="spd"></b><div class="u">km/h</div></div><div><div class="l">Energy</div><b class="m n" id="cons"></b><div class="u">kWh/100 km</div></div><div><div class="l">Pack</div><b class="m n"><span id="bt"></span>°C</b><div class="u" id="th"></div></div></div>
+<details><summary>MORE TELEMETRY</summary><svg viewBox="0 0 180 36" width="100%"><polyline id="wv" fill="none" stroke="#00E5C7" stroke-width="1.5"/></svg><div class="g3"><div><div class="l">Elev</div><b class="m" id="elv"></b></div><div><div class="l">Ambient</div><b class="m" id="amb"></b></div><div><div class="l">Effic.</div><b class="m" id="eff"></b></div></div></details></div>
+<div id="mid"><div id="mw"><div id="lm"></div><div id="hdr"><div class="rtrow"><span class="pt f"></span><input id="from" type="search" placeholder="From — your current location" autocomplete="off" aria-label="Starting point"><button data-a="loc" class="ib" aria-label="Use my current location" title="Use my current location">◎</button></div><div class="m u" id="fw" style="margin:2px 0 0 20px"></div><div class="conn"></div>
+<div class="rtrow"><span class="pt t"></span><input id="q" type="search" placeholder="To — where do you want to go?" autocomplete="off" aria-label="Destination"><button data-a="swap" class="ib" aria-label="Swap start and destination" title="Swap">⇅</button></div><div id="qs" role="listbox"></div><div class="m u" id="rmsg" style="margin-top:6px"></div>
+<div id="rsum"><div class="m u"><span id="rem"></span> km · ETA <b id="eta" style="color:var(--tx)"></b></div><div class="m" id="rs" style="margin:6px 0"></div><div id="mr"></div><div id="hx" class="m"><span>BATT <b id="hs"></b>%</span><span>RANGE <b id="rg"></b> km</span><span>ARRIVAL <b id="arr"></b>%</span></div></div><span id="jt" hidden></span></div>
+<div id="mc"></div><div id="ml"></div>
+<div id="tb" role="status" aria-live="polite"><span id="tbi">↑</span><div><b id="tbd"></b><div id="tbn"></div></div></div>
+<div id="nb"><div class="nbs"><div><div class="l">ETA</div><b class="m" id="nbe"></b></div><div><div class="l">Left</div><b class="m"><span id="nbd"></span> km</b></div><div><div class="l">Arrive</div><b class="m"><span id="nba"></span>%</b></div><div><div class="l">Battery</div><b class="m"><span id="nbb"></span>%</b></div><div><div class="l">Speed</div><b class="m" id="nbs"></b></div><div><div class="l">Next stop</div><b class="m" id="nbc"></b></div></div><div class="nbb"><button data-a="start" id="nbp">❚❚ PAUSE</button><button data-a="ask">💬 ASK AI</button><button data-a="panel">DETAILS</button><button class="dg" data-a="endtrip">END</button></div></div>
+<div id="cd" role="dialog" aria-label="Discuss the route with SpectraX AI"><div class="row" style="padding:10px 12px;border-bottom:1px solid var(--b)"><b>Ask SpectraX about this route</b><button data-a="ask" aria-label="Close">✕</button></div><div id="cm"><div class="bub a">Ask about weather, chargers, road conditions or whether your battery is enough. I can search the web and live weather.</div></div><div id="cf"><input id="ci" placeholder="e.g. Is rain expected near the highway?" aria-label="Message"><button class="pri" data-a="send">SEND</button></div></div><div id="mz"><div class="m u" id="fl"></div><button data-a="cen">◎ CENTER</button><button data-a="ovw">OVERVIEW</button><div class="m u">N↑ HDG <span id="hd">262</span>°</div></div><div id="ban"></div></div><div id="tc"></div></div>
+<div class="pan" id="rp"></div></div>
+<div id="nav"></div>
+<div id="dr"></div><div id="emg"></div>
+
+<script>
+const $=i=>document.getElementById(i),set=(i,v)=>{const e=$(i);if(e)e.textContent=v},fx=(n,d=0)=>(+n).toFixed(d);
+const hm=m=>{m=Math.floor(m)%1440;return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')};
+const W={clear:[31,0],hot:[36,0],rain:[24,.9],xheat:[44,0]},WN={clear:'CLEAR',hot:'HOT',rain:'RAIN',xheat:'EXTREME HEAT'},TE=[0,1.2,3],EL=[124,260,540],TC=[0,2.2,4.5],TS=[1,.65,.35],ST=[.94,1,1.11,1.22];
+let CH=[];
+const ch=id=>CH.find(c=>c.id===id);
+const init=()=>({soc:80,bt:37.2,speed:82,traffic:0,weather:'clear',terrain:0,style:1,pos:0,clock:nowMin(),run:false,trip:'idle',from:null,to:null,pre:null,tm:1,net:true,link:true,gps:true,stop:null,alt:false,res:null,agent:'OBSERVING',ev:'ok',tab:'journey',follow:false,auto:true,ag:{},wx:null,layer:'hyb',tf:true,dest:0,sel:null,why:false,open:null,log:[],hist:[17.2],coll:false,snap:null,sched:null});
+let TOT=312,S=init(),T=0,dr=false,timers=[];
+// ---- PHYSICS / SIMULATION (deterministic) ----
+function nowMin(){const d=new Date();return d.getHours()*60+d.getMinutes()}
+function calc(s,o={}){const x={...s,...o},wd=x.wxd,amb=wd?wd.temp:31,adj=wd?.9+wd.delta:1.44;
+const c=(14.66+Math.max(0,x.speed-60)*.05+TC[x.traffic]+adj+TE[x.terrain])*ST[x.style],v=x.speed*TS[x.traffic]*(wd?wd.sf:1),rem=TOT-x.pos;
+return{amb,c,v,rem,arr:x.soc-rem*c/118+(x.stop?22:0),eta:x.clock+rem/v*60+(x.stop?25:0),range:Math.max(0,(x.soc-8)*118/c),elev:wd&&wd.elev!=null?Math.round(wd.elev):EL[x.terrain],eff:Math.min(99,91*17.2/c)}}
+const TITAN_BACKEND={enabled:false,baseUrl:''};/* when a Titan backend → Nebius → Nemotron exists, replace TitanAIService methods with fetch() calls returning the same shapes */
+// ---- AI LAYER (SIMULATED — deterministic mock; Nemotron not connected) ----
+const TitanAIService={
+analyzeJourney(s){const c=calc(s),b=calc(s,{traffic:0,weather:'clear',terrain:0,style:1,speed:82});const st=s.stop?ch(s.stop):null;
+if(s.ev==='fail')return{t:'CHARGER CHANGE',lv:'o',body:'Previous charger unavailable. SpectraX selected '+(st?st.n:'none')+'.',kv:[['Arrival SoC',fx(c.arr)+'%'],['Journey impact','+7 min']],why:['Charger status changed to unavailable','Alternate stop adds 7 minutes','Alternate stop restores arrival margin','Ranked by availability, power and reliability'],dec:st?'Switch charging stop to '+st.n:'No charger reachable — ACTION REQUIRED'};
+if(c.arr<15||s.ev==='risk')return{t:'JOURNEY RISK',lv:'o',body:s.stop?'Margin restored with a charging stop.':'Energy margin below threshold.',kv:[['Arrival SoC',fx(c.arr)+'%'],['Recommended action',st?'Charge at '+st.n:'Charge en route']],why:['Consumption '+fx((c.c/b.c-1)*100,1)+'% above baseline','Arrival SoC projected at '+fx(c.arr)+'%','Margin fell below 15% threshold','Highest-ranked available charger selected'],dec:'Charge at '+(st?st.n:'nearest HPC')};
+return{t:'JOURNEY HEALTH',lv:'t',body:'Current plan remains viable.',kv:[['Arrival SoC',fx(c.arr)+'%'],['Energy margin',(c.arr-10>=0?'+':'')+fx((c.arr-10)/ (c.arr||1)*10,1)+'%'],['Recommended charger',(st||CH.find(c=>c.on&&c.av&&c.km>S.pos)||{n:'none ahead'}).n]],why:['Consumption within baseline band','Arrival SoC above 15% threshold','Chargers ahead report availability'],dec:'Maintain current plan'}},
+evaluateCharger(c){return{score:c.rel-(c.km-S.pos)/10,ok:c.av}},replanJourney(){return CH.find(h=>h.av&&h.on&&h.km>S.pos)},explainDecision(d){return d.why},
+processEmergency(s){return['VEHICLE STATE CAPTURED','GPS LOCATION LOCKED','BATTERY STATE RECORDED','LAST TELEMETRY PRESERVED','EMERGENCY WORKFLOW INITIALIZED']}};
+// InfrastructureIntelService placeholder (Tavily later): simulated feed
+const InfrastructureIntelService={feed:()=>['Road closure detected — NH44 km 190','Charger maintenance detected — Hosur HPC-02','Highway disruption detected','Charging station operating status changed']};
+// ---- logging / agent ----
+function log(m,k){const c=S.clock;S.log.unshift(`<div class="${k||''}">${hm(c)}:${String(Math.floor((c%1)*60)).padStart(2,'0')} ${m}</div>`);S.log=S.log.slice(0,30);const e=$('log');if(e)e.innerHTML=S.log.join('')}
+function plan(){const c=calc(S),old=S.stop&&ch(S.stop);if(!S.stop&&c.arr<15||old&&!old.av){const n=TitanAIService.replanJourney();if(n){S.stop=n.id;setTimeout(()=>focus(n.id,1),80);if(old){S.alt=true;S.ev='fail';log('ALTERNATIVE CHARGER FOUND: '+n.n,'k')}else{S.ev='risk';log('CHARGER SELECTED: '+n.n)}}else{S.stop=null;S.agent='ACTION REQUIRED';S.ev='risk';log('NO CHARGER REACHABLE','k')}}
+else if(c.arr>=15&&!S.stop)S.ev='ok';log('PLAN UPDATED');}
+function react(cause,more){if(S.coll)return;timers.forEach(clearTimeout);timers=[];log(cause,'k');const b=calc(S);
+['ANALYZING','PREDICTING','RE-PLANNING'].forEach((a,i)=>timers.push(setTimeout(()=>{S.agent=a;if(i==0)log('ENERGY MODEL RECALCULATED');if(i==1)log('ARRIVAL SOC = '+fx(calc(S).arr)+'%');if(i==2)log('EVALUATING ALTERNATE ROUTES');if(i==2&&calc(S).arr<15||S.stop&&!ch(S.stop).av)log('JOURNEY MARGIN BELOW THRESHOLD','k');render()},i*700+300)));
+timers.push(setTimeout(()=>{plan();if(more)more();S.agent=S.agent=='ACTION REQUIRED'?'ACTION REQUIRED':'PLAN UPDATED';render();if(S.auto&&location.protocol!='file:')setTimeout(()=>runAgent(cause),600)},2500));
+timers.push(setTimeout(()=>{if(S.agent!='ACTION REQUIRED')S.agent='OBSERVING';render()},4300))}
+function delta(label,fn){const b=calc(S);fn();const a=calc(S);react(`${label} → CONSUMPTION ${(a.c/b.c-1)>=0?'+':''}${fx((a.c/b.c-1)*100,1)}% · RANGE ${fx(b.range)}→${fx(a.range)} km`);render()}
+// ---- actions ----
+const A={tab:v=>{S.tab=v;render()},savekeys:async()=>{try{await api('/api/config',{llm_key:$('k1')?$('k1').value:'',tavily_key:$('k2')?$('k2').value:''});await health();log('API KEYS SAVED (local .env)')}catch(e){log('SAVING KEYS FAILED — '+e.message,'k');render()}},pick:v=>{const r=GR[+v];$('qs').innerHTML='';setPt(GT,{n:(r.display_name||'').split(',').slice(0,2).join(',').trim()||r.name,ll:[+r.lat,+r.lon]})},loc:()=>getLoc(),swap:()=>{const f=S.from;S.from=S.to;S.to=f;syncIn();if(S.from&&S.to)planRoute()},
+start:f=>{if(!R.P)return;const t=S.trip;if(f!==true&&t!='ready'&&t!='active')return;if(t=='active'&&f!==true){S.run=!S.run;log(S.run?'TRIP RESUMED':'TRIP PAUSED');render();return}
+S.trip='active';S.run=true;S.follow=true;S.agent='OBSERVING';document.body.classList.add('nav');setTimeout(()=>MP.invalidateSize(),60);MP._fl=Date.now()+1500;MP.flyTo(at(act(),S.pos/TOT).ll,15,{duration:1.4});log('TRIP STARTED · '+S.from.n+' → '+S.to.n,'k');render();refreshWx()},
+panel:()=>{document.body.classList.toggle('nav');setTimeout(()=>MP.invalidateSize(),60);render()},endtrip:()=>clearTrip(),
+ask:()=>{const d=$('cd');d.classList.toggle('open');if(d.classList.contains('open'))$('ci').focus()},send:()=>chatSend(),agent:()=>runAgent('manual'),auto:()=>{S.auto=!S.auto;render()},lyr:v=>{S.layer=v;FB='';setLayer(v);render()},tf:()=>{S.tf=!S.tf;render()},
+cen:()=>{S.follow=true;MP._fl=Date.now()+1200;MP.flyTo(at(act(),S.pos/TOT).ll,11,{duration:1})},ovw:()=>MP.fitBounds(L.polyline(act().P).getBounds(),{padding:[60,60]}),
+route:v=>{const to=v=='1';if(to===!!S.alt||(to&&!R.A))return;S.alt=to;react(to?'ALTERNATE ROUTE SELECTED · '+Math.round(R.A.t/1000)+' km':'PRIMARY ROUTE SELECTED');render()},
+dst:v=>{const p=v.split(',').map(Number);MP.closePopup();rev(p).then(n=>setPt('to',{n,ll:p}))},fs:()=>{document.body.classList.toggle('fs');setTimeout(()=>MP.invalidateSize(),60);render()},det:v=>{S.open=v;A.tab('charging')},
+drawer:()=>{dr=!dr;$('dr').classList.toggle('open',dr)},diag:()=>{const d=$('diag');d.style.display=d.style.display=='block'?'none':'block'},
+why:()=>{S.why=!S.why;render()},open:v=>{S.open=S.open==v?null:v;if(S.open)focus(v);render()},
+traffic:v=>delta('TRAFFIC '+['NORMAL','HEAVY +28%','SEVERE +55%'][v],()=>S.traffic=+v),weather:v=>delta('WEATHER '+WN[v],()=>S.weather=v),terrain:v=>delta('TERRAIN '+['FLAT','HILLY','STEEP CLIMB'][v],()=>S.terrain=+v),style:v=>delta('DRIVING STYLE '+['ECO','BALANCED','DYNAMIC','AGGRESSIVE'][v],()=>S.style=+v),
+tm:v=>{S.tm=+v;render()},
+reserve:v=>{MP&&MP.closePopup();const c=ch(v);S.res=v;S.stop=v;const a=hm(S.clock+(c.km-S.pos)/(calc(S).v*.95)*60);log('RESERVATION CONFIRMED '+c.n);render()},cancel:()=>{S.res=null;log('RESERVATION CANCELLED');render()},
+fail:()=>{if(!S.stop){const n=TitanAIService.replanJourney();if(!n){log('NO CHARGER ON ROUTE TO FAIL','k');return}S.stop=n.id}const c=ch(S.stop);c.av=false;S.res=null;react('CHARGER FAILURE: '+c.n+' UNAVAILABLE');render()},
+net:()=>{S.net=!S.net;log(S.net?'NETWORK RESTORED':'NETWORK UNAVAILABLE — OFFLINE MODE','k');render()},link:()=>{S.link=!S.link;log(S.link?'VEHICLE LINK RESTORED':'VEHICLE LINK LOST','k');render()},
+collide:()=>{const c=calc(S),f=S.pos/TOT;S.snap={lat:13.0827-0.1111*f,lon:80.2707-2.6761*f,spd:fx(c.v),soc:fx(S.soc),bt:fx(S.bt,1),hd:'262° W',t:hm(S.clock)};S.coll=true;S.agent='ACTION REQUIRED';log('COLLISION DETECTED','k');render()},
+endc:()=>{S.coll=false;S.agent='OBSERVING';log('SAFETY SIMULATION ENDED');render()},
+reset:()=>{timers.forEach(clearTimeout);CH.forEach(c=>c.av=true);Object.assign(S,{soc:80,bt:37.2,traffic:0,pos:0,run:false,stop:null,res:null,alt:false,sel:null,ev:'ok',agent:'OBSERVING',coll:false,follow:false,log:[],hist:[17.2],sched:null,open:null,why:false,tm:1,clock:nowMin(),trip:R.P?(S.pre&&S.pre.done?'ready':'planning'):'idle'});document.body.classList.remove('nav');RK='';PA=false;log('SIMULATION RESET');render()},
+opt:()=>{S.sched='02:00–05:00 · 7.4 kW AC · 0→80% · ₹'+fx(70*18.4-142)+' (saves ₹142)';log('CHARGING SCHEDULE OPTIMIZED');render()},
+scen:v=>{S.scen=v;render()},
+demo:()=>{if(!R.P){log('PLAN A ROUTE FIRST','k');return}A.reset();dr=false;$('dr').classList.remove('open');S.tm=5;S.soc=Math.min(100,18+TOT*calc(S).c/118);A.start(true);render();log('DEMO PHASE 1 — JOURNEY STABLE');
+[[4,()=>A.traffic(1)],[11,()=>A.fail()],[19,()=>log('DEMO PHASE 10 — JOURNEY VIABLE AGAIN')],[22,()=>log('DEMO COMPLETE — use SIMULATE COLLISION to test safety')]].forEach(([s,f])=>setTimeout(f,s*1000))}};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(b){A[b.dataset.a](b.dataset.v);}});
+document.addEventListener('input',e=>{const k=e.target.dataset.s;if(k){S[k]=+e.target.value;set('sv'+k,e.target.value);live()}});
+// ---- render ----
+const SC=[['NORMAL',{},0],['HEAVY TRAFFIC',{traffic:1},0],['HOT WEATHER',{weather:'xheat'},0],['STEEP TERRAIN',{terrain:2},0],['LOW BATTERY',{soc:30},0],['CHARGER FAILURE',{},7],['NETWORK LOSS',{},0],['MULTIPLE EVENTS',{traffic:1,weather:'xheat',terrain:1},7]];
+const seg=(a,arr,cur)=>`<div class="seg">${arr.map(([l,v])=>`<button data-a="${a}" data-v="${v}" class="${cur==v?'on':''}">${l}</button>`).join('')}</div>`;
+function drawer(){return`<div class="l">SIMULATION · DEMO ONLY</div><p class="u" style="margin:6px 0 10px">Simulated for demonstration: battery level, traffic and charger faults. This is not real vehicle or traffic data. Weather, roads, places and chargers' locations are real.</p>
+<div class="l">Battery SoC <span id="svsoc">${fx(S.soc)}</span>%</div><input type="range" min="5" max="100" value="${S.soc}" data-s="soc" aria-label="Simulated battery state of charge">
+<div class="l" style="margin-top:8px">Traffic (simulated)</div>${seg('traffic',[['NORMAL',0],['HEAVY',1],['SEVERE',2]],S.traffic)}
+<div class="l">Demo speed</div>${seg('tm',[['1×',1],['5×',5],['20×',20]],S.tm)}
+<div class="seg"><button data-a="fail">CHARGER FAILURE</button><button class="dg" data-a="collide">COLLISION</button></div>
+<div class="seg"><button data-a="reset">RESET</button><button class="pri" data-a="demo">▶ RUN DEMO</button></div>`}
+function charger(c){const arr=hm(S.clock+(c.km-S.pos)/(calc(S).v*.95)*60),res=S.res==c.id,mins=Math.round(70/(Math.min(c.kw,200)*.9)*60);
+return`<div class="card ${c.av?'':'r'}"><div class="row" data-a="open" data-v="${c.id}" style="cursor:pointer"><b class="m">${c.n}</b><span class="m" style="color:${c.av?'var(--t)':'var(--r)'}">${c.av?c.sl+' free':'UNAVAILABLE'}</span></div>
+<div class="m u">${Math.max(0,c.km-S.pos)|0} km · ${c.kwEst?'~':''}${c.kw} kW · ₹${c.pr}/kWh</div>${S.open==c.id?`<div class="m u" style="margin-top:6px;line-height:1.7">Arrival ${arr}<br>Charge 20→80%: ~${mins} min · ~₹${Math.round(70*c.pr)}<br>Reliability ${c.rel}%</div>`:''}
+<div class="row" style="margin-top:6px"><span class="m u">ARRIVAL ${arr}</span>${res?`<button data-a="cancel">CANCEL</button>`:`<button class="pri" data-a="reserve" data-v="${c.id}" ${c.av?'':'disabled'}>RESERVE</button>`}</div>
+${res?`<div class="m" style="color:var(--t);margin-top:6px">✓ RESERVED (SIMULATION) · Slot ${arr}–${hm(S.clock+(c.km-S.pos)/(calc(S).v*.95)*60+mins)}<br>ID SPX-4821</div>`:''}</div>`}
+function render(){
+$('nav').innerHTML=['JOURNEY','VEHICLE','ENERGY','CHARGING','INTELLIGENCE','SAFETY','SYSTEM'].map(t=>`<button data-a="tab" data-v="${t.toLowerCase()}" class="${S.tab==t.toLowerCase()?'on':''}">${t}</button>`).join('');
+const d=TitanAIService.analyzeJourney(S),ag=S.agent,ac={OBSERVING:'--t','PLAN UPDATED':'--t',ANALYZING:'--w',PREDICTING:'--w','RE-PLANNING':'--o','ACTION REQUIRED':'--r'}[ag];
+$('rp').innerHTML=rpHTML(d,ag,ac);
+$('js').innerHTML=S.coll?'<span style="color:var(--r)">⚠ SAFETY MODE</span>':S.run?'JOURNEY ACTIVE':'JOURNEY PAUSED';
+$('dr').innerHTML=drawer();
+$('p1').className='pill'+(S.net?'':' off');$('p1').textContent=(S.net?'● ':'○ ')+'LTE';$('p2').className='pill'+(S.gps?'':' off');$('p2').textContent=(S.gps?'● ':'○ ')+'GPS';$('p3').className='pill'+(S.link?'':' off');$('p3').textContent=(S.link?'● ':'○ ')+'VEHICLE LINK';
+$('diag').innerHTML=`LTE ${S.net?'ONLINE':'OFFLINE — cached data'}<br>GPS ONLINE<br>VEHICLE LINK ${S.link?'ONLINE':'LOST'}<br>CHARGER DATA ${S.net?'LIVE':'DEGRADED'}`;
+set('rmsg',S.rerr||({routing:'Finding the best road route…',planning:'Running pre-trip checks…',ready:'Route ready — review the briefing, then start',active:S.run?'Trip in progress':'Trip paused',done:'You have arrived'}[S.trip]||'Enter a destination to plan your trip'));set('fw',S.spot&&S.spot.ok?S.spot.points[0].temp_c+'°C · '+S.spot.points[0].condition+' · wind '+S.spot.points[0].wind_kmh+' km/h here':'');$('emg').style.display=S.coll?'block':'none';
+if(S.coll){const s=S.snap;$('emg').innerHTML=`<h1 style="color:var(--r);font-weight:500">⚠ COLLISION DETECTED</h1><p class="m u" style="margin:12px 0;line-height:1.9">${TitanAIService.processEmergency().map(x=>'✓ '+x).join('<br>')}</p><div class="g m"><div class="card r">GPS<br>${fx(s.lat,4)}°N ${fx(s.lon,4)}°E</div><div class="card r">SPEED AT IMPACT<br>${s.spd} km/h</div><div class="card r">BATTERY<br>${s.soc}% · ${s.bt}°C</div><div class="card r">HEADING / TIME<br>${s.hd} · ${s.t}</div></div><div class="seg" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap"><button>EMERGENCY SERVICES</button><button>ROAD ASSISTANCE</button><button>HOSPITAL</button><button>EMERGENCY CONTACT</button></div><p class="u">Simulation only — no real calls are made.</p><button class="pri" data-a="endc" style="margin-top:12px">END SIMULATION</button>`}
+tab();live()}
+function tab(){const c=calc(S),m=$('tc'),t=S.tab,r=(a,b)=>`<div class="row"><span class="u">${a}</span><b class="m">${b}</b></div>`;
+$('mw').style.display=t=='journey'?'block':'none';m.style.display=t=='journey'?'none':'block';const wm=LT=='journey';LT=t;if(t=='journey'){if(!wm&&MP)setTimeout(()=>MP.invalidateSize(),0);drawAll();return}
+{let h='';
+if(t=='vehicle')h=`<h3>BATTERY / MOTOR / THERMAL</h3><div class="g card">${r('SoC',fx(S.soc)+'%')}${r('Pack temp',fx(S.bt,1)+'°C')}${r('Motor load',fx(c.v*.9)+'%')}${r('Efficiency',fx(c.eff)+'%')}${r('Charge limit','80%')}${r('Telemetry','10 Hz')}</div><h3>CONSUMPTION TREND</h3>${spark()}`;
+if(t=='energy')h=`<h3>ENERGY CONSUMPTION · kWh/100 km</h3>${spark()}<div class="g card">${r('BASELINE','17.2')}${r('CURRENT',fx(c.c,1))}${r('PREDICTED',fx(calc(S,{traffic:Math.max(S.traffic,0)}).c,1))}${r('Energy margin',fx(c.arr-10,1)+'%')}${r('Battery reserve','8%')}${r('Arrival SoC',fx(c.arr)+'%')}</div><p class="u">Energy = base + speed + elevation + traffic + temperature + auxiliary, × driving style.</p>`;
+if(t=='charging')h=`<h3>CHARGING</h3><div class="g">${CH.filter(c=>c.on&&c.km>S.pos-1).slice(0,12).map(charger).join('')}</div><h3>SMART CHARGING INTELLIGENCE</h3><div class="g card">${r('CURRENT PRICE','₹18.4/kWh')}${r('LOW-COST WINDOW','02:00–05:00')}${r('EST. SAVING','₹142')}</div><button class="pri" data-a="opt">OPTIMIZE CHARGING</button> <span class="m u">${S.sched||''}</span><h3>HISTORY</h3><p class="m u">12 Sep · Hosur · 41 kWh · ₹742<br>03 Sep · Vellore · 28 kWh · ₹498</p><p class="u">V2G is a future concept; nothing here controls the grid.</p>`;
+if(t=='intelligence'){const on=a=>S.agent==a?'var(--o)':'var(--t)';h=`<h3>DECISION PIPELINE</h3><div class="m card" style="line-height:2">VEHICLE DATA ↓ TELEMETRY ANALYSIS ↓ ENERGY MODEL ↓ INFRASTRUCTURE INTELLIGENCE ↓ <b style="color:var(--w)">REASONING (SIMULATED — Nemotron not connected)</b> ↓ JOURNEY DECISION ↓ RE-PLANNING</div><div class="g">${[['RANGE AGENT',['ANALYZING','PREDICTING']],['INFRASTRUCTURE AGENT',['RE-PLANNING']],['SAFETY AGENT',['ACTION REQUIRED']],['JOURNEY ORCHESTRATOR',['OBSERVING','PLAN UPDATED']]].map(([n,s])=>`<div class="card"><div class="row"><b class="m">${n}</b><span class="dot" style="background:${s.includes(S.agent)?'var(--o)':'var(--t)'}"></span></div><div class="u">${s.includes(S.agent)?'ACTIVE':'IDLE'}</div></div>`).join('')}</div><h3>EXTERNAL INTEL (simulated feed)</h3><p class="m u">${InfrastructureIntelService.feed().join('<br>')}</p><p class="u" style="margin-top:8px">Frontend → Backend → Nebius Token Factory → NVIDIA Nemotron (planned)</p>`}
+if(t=='safety')h=`<h3>SAFETY AGENT</h3><div class="card">${r('Status','MONITORING')}${r('Last telemetry',hm(S.clock))}</div><button class="dg" data-a="collide">SIMULATE COLLISION</button>`;
+if(t=='system')h=`<h3>SYSTEM HEALTH</h3><div class="card">${['VEHICLE LINK|'+S.link,'GPS|'+S.gps,'MAP DATA|'+!FB,'CHARGER DATA|'+S.net,'BACKEND|'+!!(HEALTH&&HEALTH.ok),'AI KEY SET|'+!!(HEALTH&&HEALTH.llm_key),'SEARCH KEY SET|'+!!(HEALTH&&HEALTH.tavily_key),'NETWORK|'+S.net].map(x=>{const[a,b]=x.split('|');return r(a,b=='true'?'ONLINE':'OFFLINE')}).join('')}${r('BACKEND PING',LAT?LAT+' ms':'—')}${r('TELEMETRY RATE','10 Hz')}${r('LAST MODEL UPDATE',hm(S.clock))}</div>${keyForm()}`;
+m.innerHTML=`<div class="tab">${h}</div>`}}
+function spark(){const h=S.hist.slice(-60),mx=24,mn=12,p=h.map((v,i)=>`${i*(600/Math.max(59,h.length-1))},${150-(v-mn)/(mx-mn)*140}`).join(' ');return`<svg viewBox="0 0 600 150" width="100%" style="background:var(--e);border:1px solid var(--b)"><line x1="0" x2="600" y1="${150-(17.2-mn)/(mx-mn)*140}" y2="${150-(17.2-mn)/(mx-mn)*140}" stroke="#5D6B71" stroke-dasharray="4 4"/><polyline points="${p}" fill="none" stroke="#00E5C7" stroke-width="2"/></svg>`}
+function live(){const c=calc(S),th=S.bt>55?'THERMAL CRITICAL':S.bt>45?'THERMAL HIGH':'THERMAL NORMAL';
+set('soc',fx(S.soc));set('bt',fx(S.bt,1));set('th',th);set('spd',fx(c.v));set('cons',fx(c.c,1));set('elv',c.elev+' m');set('amb',c.amb+'°C');set('eff',fx(c.eff)+'%');set('clk',hm(S.clock));
+$('bf').style.width=S.soc+'%';$('bf').style.background=S.soc<20?'var(--r)':S.soc<35?'var(--o)':'var(--t)';
+$('wv').setAttribute('points',Array.from({length:36},(_,i)=>`${i*5},${18+Math.sin(i*.6+T/4)*(4+c.v/10)*(.5+c.c/20)}`).join(' '));
+set('rem',fx(c.rem));set('eta',hm(c.eta));set('arr',fx(c.arr));set('rg',fx(c.range));set('rg2',fx(c.range));set('ar2',fx(c.arr));set('rgs',c.arr<10?'· CRITICAL':c.arr<15?'· MARGIN LOW':'· SAFE');
+const rs=$('rs');if(rs){const a=S.agent;rs.textContent=a=='RE-PLANNING'?'↻ RE-PLANNING JOURNEY':S.ev=='fail'?'✓ ALTERNATE CHARGER SELECTED':c.arr<15&&!S.stop?'⚠ ENERGY MARGIN LOW':S.traffic?'⚠ TRAFFIC IMPACT DETECTED':'● ROUTE STABLE';rs.style.color=a=='RE-PLANNING'||S.traffic?'var(--o)':'var(--t)'}
+moveVeh()}
+setInterval(()=>{if(!S.run||S.coll||!S.link)return;T++;const c=calc(S),sim=.1*S.tm*20,d=c.v*sim/3600;
+S.pos=Math.min(TOT,S.pos+d);S.soc=Math.max(0,S.soc-d*c.c/118);S.clock+=sim/60;S.bt+=((37+(c.c-17.2)*1.5+(c.amb-31)*.3)-S.bt)*.01;
+if(S.pos>=TOT){S.run=false;S.trip='done';document.body.classList.remove('nav');log('ARRIVED AT DESTINATION');render()}
+if(T%10==0){S.hist.push(c.c)}if(T%40==0){log('TELEMETRY UPDATED · ARRIVAL SOC = '+fx(c.arr)+'%')}
+if(T%20==0&&S.agent=='OBSERVING'&&S.tab=='journey'&&c.arr<15&&!S.stop){react('MARGIN BELOW THRESHOLD')}
+live()},100);
+
+// ---- REAL MAP LAYER (Leaflet). REAL: imagery/roads/geometry. SIMULATED: everything else ----
+let MP,R={},LT='',PA=false,RK='',FB='',BL,LBL=[],er=0,V={};
+const rad=Math.PI/180,ES='https://server.arcgisonline.com/ArcGIS/rest/services/',TK=window.TITAN_CONFIG&&window.TITAN_CONFIG.MAP_KEY;
+const VI='<div><svg viewBox="-17 -17 34 34" width="34" height="34"><circle r="15" fill="#00E5C7" fill-opacity=".14"/><path d="M0 -12 L8 10 L0 5 L-8 10Z" fill="#00E5C7" stroke="#001a17" stroke-width="1.5"/></svg></div>';
+const tl=(u,o)=>L.tileLayer(u,{maxZoom:18,...o}),act=()=>S.alt&&R.A?R.A:R.P;
+const prep=P=>{const c=[0];for(let i=1;i<P.length;i++)c.push(c[i-1]+L.latLng(P[i-1]).distanceTo(L.latLng(P[i])));return{P,c,t:c[c.length-1]}};
+function at(r,f){const d=Math.min(1,Math.max(0,f))*r.t;let i=1;while(i<r.c.length-1&&r.c[i]<d)i++;const a=r.P[i-1],b=r.P[i],k=(d-r.c[i-1])/((r.c[i]-r.c[i-1])||1),p1=a[0]*rad,p2=b[0]*rad,dl=(b[1]-a[1])*rad;
+return{ll:[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k],h:(Math.atan2(Math.sin(dl)*Math.cos(p2),Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl))/rad+360)%360}}
+function near(r,ll){let bi=0,bd=1e9;r.P.forEach((p,i)=>{const d=(p[0]-ll[0])**2+((p[1]-ll[1])*.97)**2;if(d<bd){bd=d;bi=i}});return{f:r.c[bi]/r.t,d:L.latLng(r.P[bi]).distanceTo(L.latLng(ll))}}
+const sub=(r,a,b)=>r.P.filter((_,i)=>r.c[i]/r.t>=Math.min(a,b)&&r.c[i]/r.t<=Math.max(a,b));
+function setLayer(k){if(BL)MP.removeLayer(BL);LBL.forEach(l=>MP.removeLayer(l));LBL=[];const sat=k=='sat'||k=='hyb';
+BL=k=='road'?tl('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',attribution:'© OpenStreetMap © CARTO'}):k=='ter'?tl('https://tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap © OpenStreetMap'}):TK?tl('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/512/{z}/{x}/{y}@2x?access_token='+TK,{tileSize:512,zoomOffset:-1,attribution:'© Mapbox © Maxar'}):tl(ES+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Imagery © Esri, Maxar, Earthstar Geographics'});
+BL.on('tileerror',()=>{if(sat&&++er>6&&!FB){FB='SATELLITE LAYER UNAVAILABLE · ROAD MAP ACTIVE';S.layer='road';setLayer('road');drawAll()}});BL.addTo(MP);
+if(k=='hyb')['Reference/World_Transportation','Reference/World_Boundaries_and_Places'].forEach(u=>{const l=tl(ES+u+'/MapServer/tile/{z}/{y}/{x}',{pane:'lab'});l.addTo(MP);LBL.push(l)});
+MP.getContainer().classList.toggle('dim',k!='road')}
+const cicon=c=>L.divIcon({className:'',html:`<div class="cm ${!c.av?'r':c.sl<=4?'w':'t'}${S.stop==c.id?' sel':''}">${S.res==c.id?'✓':'⚡'}</div>`,iconSize:[30,30],iconAnchor:[15,15]});
+function popup(c){const a=calc(S),arr=hm(S.clock+(c.km-S.pos)/(a.v*.95)*60);return`<b class="m">${c.n}</b><div class="m u" style="line-height:1.7">${Math.max(0,c.km-S.pos)|0} km ahead · ${c.kwEst?'~':''}${c.kw} kW<br>${c.av?c.sl+' / 16 AVAILABLE':'UNAVAILABLE'} · ₹${c.pr}/kWh<br>Reliability ${c.rel}% · ETA ${arr}<br>Arrival SoC ${fx(a.arr)}%</div><div class="row" style="margin-top:6px"><button class="pri" data-a="reserve" data-v="${c.id}" ${c.av?'':'disabled'}>RESERVE</button><button data-a="det" data-v="${c.id}">DETAILS</button></div>`}
+function focus(id,auto){const c=ch(id);if(!MP||!c||!c.on)return;S.sel=id;if(S.tab!='journey'){if(auto)return;S.tab='journey';render()}S.follow=false;MP.flyTo(c.ll,10,{duration:1.2});setTimeout(()=>c.mk.openPopup(),1300);render()}
+function lab(m,on,ll,t,col){if(!on){m.remove();return}col=col||'#FF7A18';m.setLatLng(ll).setIcon(L.divIcon({className:'',html:`<div class="tag" style="border-color:${col};color:${col}">${t}</div>`,iconSize:[0,0]})).addTo(MP)}
+function ctl(){const ea=S.alt&&!!R.A,t=S.trip,c=calc(S),can=t=='ready'||t=='active',b=(a,v,l,on)=>`<button data-a="${a}"${v===''?'':` data-v="${v}"`} class="${on?'on':''}" aria-pressed="${!!on}">${l}</button>`,et=r=>hm(S.clock+r.t/1000*(1-S.pos/TOT)/c.v*60);
+$('mc').innerHTML=`<div class="row" style="gap:6px"><button data-a="ask">💬 ASK AI</button><button data-a="start" class="go" ${can?'':'disabled'}>${t=='active'?(S.run?'❚❚ PAUSE':'▶ RESUME'):t=='done'?'ARRIVED':'▶ START TRIP'}</button></div><div class="row" style="gap:6px">${R.P?'<button data-a="endtrip">END / CLEAR</button>':''}${b('fs','',document.body.classList.contains('fs')?'EXIT FULLSCREEN':'EXPAND MAP',0)}</div>`;
+$('ml').innerHTML=[['hyb','SAT + ROADS'],['sat','SATELLITE'],['road','ROAD'],['ter','TERRAIN']].map(x=>b('lyr',x[0],x[1],S.layer==x[0])).join('')+b('tf','',`TRAFFIC ${S.tf?'ON':'OFF'} (SIM)`,S.tf);
+$('mr').innerHTML=R.P?b('route',0,`PRIMARY · ${Math.round(R.P.t/1000)} km · ${et(R.P)}`,!ea)+(R.A?b('route',1,`ALTERNATE · ${Math.round(R.A.t/1000)} km · ${et(R.A)}`,ea):''):''}
+function cc(c){const a=calc(S),v=at(act(),S.pos/TOT).ll,dir=L.latLng(v).distanceTo(L.latLng(c.ll))/1000,al=Math.max(0,c.km-S.pos),det=near(act(),c.ll).d/1000,arr=hm(S.clock+al/a.v*60),as=S.soc-al*a.c/118,res=S.res==c.id,sel=S.stop==c.id||S.sel==c.id;
+return`<div class="cc${c.av?'':' bad'}${sel?' sel':''}"><div class="row"><b>${esc(c.n)}</b><span class="m${c.av?'':' rd'}">${c.av?c.sl+'/16 free (sim)':'UNAVAILABLE'}</span></div><div class="m u">${fx(c.ll[0],3)}°N ${fx(c.ll[1],3)}°E · ${c.kwEst?'~':''}${c.kw} kW · ₹${c.pr}/kWh (sim)</div><div class="m u">${al|0} km along route · ${dir|0} km direct · ${fx(det,1)} km off-route</div><div class="row m"><span>ETA <b>${arr}</b></span><span>ARRIVE <b>${fx(as)}%</b></span></div><div class="row" style="gap:6px"><button class="sec" data-a="open" data-v="${c.id}">${S.open==c.id?'HIDE':'SELECT'}</button>${res?'<button data-a="cancel">CANCEL</button>':`<button class="pri" data-a="reserve" data-v="${c.id}" ${c.av?'':'disabled'}>RESERVE · SIM</button>`}</div>${S.open==c.id?`<div class="m u">Charge 20→80%: ~${Math.round(70/(Math.min(c.kw,200)*.9)*60)} min · ~₹${Math.round(70*c.pr)} · reliability ${c.rel}% (sim)</div>`:''}${res?'<div class="m" style="color:var(--t)">✓ RESERVED · SIMULATION · SPX-4821</div>':''}</div>`}
+function preHTML(){const P=S.pre;if(!P)return S.trip=='routing'?'<div class="cc"><div class="m u">Finding the best road route…</div></div>':'';
+let h='<div class="l">PRE-TRIP CHECK</div><div class="cc"><ul class="chk">'+P.steps.map(x=>`<li class="${x.st}"><i class="sp"></i><span>${esc(x.l)}</span><em>${esc(x.m||'')}</em></li>`).join('')+'</ul>',b=P.brief;
+if(b){h+=`<span class="verdict ${esc(b.verdict||'caution')}">${esc((b.verdict||'caution').toUpperCase())}</span><p style="font-size:14px;margin:6px 0">${esc(b.summary||'')}</p>`+[['Weather',b.weather_notes],['Chargers',b.charger_notes],['Roads',b.road_notes],['Your location',b.location_notes]].filter(x=>x[1]).map(x=>`<div class="u" style="margin-bottom:4px"><b style="color:var(--tx)">${x[0]}:</b> ${esc(x[1])}</div>`).join('')+(b.risks&&b.risks.length?`<ul>${b.risks.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`:'')+((b.sources||[]).filter(u=>/^https?:\/\//.test(u)).slice(0,4).map(u=>`<div class="m u"><a href="${esc(u)}" target="_blank" rel="noopener" style="color:var(--t)">${esc(u.slice(0,60))}</a></div>`).join(''))+(b.limitations?`<div class="m u">Limits: ${esc([].concat(b.limitations).join('; '))}</div>`:'')+`<div class="m u">Model ${esc(P.model||'')}</div>`}
+else if(P.done)h+='<div class="m" style="color:var(--w)">AI briefing unavailable — you can still start at your own discretion.</div>';return h+'</div>'}
+function rpHTML(d,ag,ac){const ev=`<details ${S.lo?'open':''} ontoggle="S.lo=this.open"><summary>SYSTEM EVENTS (${S.log.length})</summary><div id="log">${S.log.join('')}</div></details>`;
+if(!R.P)return`<div class="row"><div class="l">SPECTRAX INTELLIGENCE</div><span class="m" style="color:var(--t)">STANDBY</span></div><div class="card"><p>Enter a destination to plan your trip.</p><div class="u">Before you start, SpectraX checks the route with live weather (Open-Meteo), current news on roads and chargers (Tavily) and NVIDIA Nemotron.</div>${HEALTH&&!HEALTH.ok?'<div class="m" style="color:var(--w);margin-top:6px">Backend not running — start server.py for weather, news search and AI.</div>':HEALTH&&(!HEALTH.llm_key||!HEALTH.tavily_key)?'<div class="m" style="color:var(--w);margin-top:6px">API keys missing — add them in .env or on the System tab.</div>':''}</div>${preHTML()}${ev}`;
+const c=calc(S),b=calc(S,{traffic:0,wxd:null,style:1,speed:82}),dc=(c.c/b.c-1)*100,st=S.stop&&ch(S.stop),busy=ag=='ANALYZING'||ag=='PREDICTING',wd=S.wxd;
+const cd=[S.traffic?['Heavy','Severe'][S.traffic-1]+' traffic (sim)':'',wd&&wd.delta>.3?'Weather adds '+fx(wd.delta,1)+' kWh/100 km':'',S.alt?'Alternate route':''].filter(Boolean);
+const imp=[`Consumption ${dc>=0?'+':''}${fx(dc,1)}% vs baseline`,`Arrival SoC ${fx(c.arr)}% (target ≥ 15%)`,cd.length?cd.join(' · '):'No active disturbances'];
+const rs=ag=='ACTION REQUIRED'?['No reachable charger — driver action required']:ag=='RE-PLANNING'?['Evaluating alternate routes and charging stations','Comparing detour, availability, arrival SoC']:busy?['Recalculating energy model']:st?['Charging stop set: '+st.n]:['Monitoring journey'];
+const li=a=>'<ul>'+a.map(x=>`<li>${esc(x)}</li>`).join('')+'</ul>';
+return`<div class="row"><div class="l">SPECTRAX INTELLIGENCE</div><span class="m" style="color:var(${ac})"><span class="dot" style="background:var(${ac})"></span>${ag}</span></div><div class="m u" style="margin:2px 0 8px">${S.ag&&S.ag.ok?'Live model: '+esc(S.ag.model):'Deterministic planner · AI analysis uses Nemotron'}</div>${preHTML()}
+<div class="card ${d.lv=='o'?'o':''}"><div class="l">JOURNEY UPDATE · ${d.t}</div><p>${d.body}</p><div class="l">IMPACT</div>${li(imp)}<div class="l">SPECTRAX RESPONSE</div>${li(rs)}<div class="l">UPDATED PLAN</div>${d.kv.map(k=>`<div class="row m"><span class="u">${k[0]}</span><b>${k[1]}</b></div>`).join('')}<div class="row m"><span class="u">ETA</span><b>${hm(c.eta)}</b></div><button class="sec" data-a="why" aria-expanded="${S.why}" style="margin-top:8px">WHY?</button>${S.why?`<div class="u" style="margin-top:8px"><b style="color:var(--tx)">WHY THIS DECISION?</b>${li(d.why)}<b style="color:var(--t)">DECISION</b> ${esc(d.dec)}</div>`:''}</div>
+${agHTML()}<div class="l">CHARGING STATIONS</div><div class="m u" style="margin-bottom:4px">Locations: OpenStreetMap · availability, price, reliability: simulated</div>${CH.filter(c=>c.on&&c.km>S.pos-1).slice(0,4).map(cc).join('')||'<div class="m u">No charger data on this route.</div>'}${ev}`}
+function drawAll(){if(!MP)return;ctl();if(!R.P)return;const ea=S.alt&&!!R.A;if(PA!==ea){const ll=at(PA?R.A:R.P,S.pos/TOT).ll;PA=ea;TOT=Math.max(1,Math.round(act().t/1000));S.pos=near(act(),ll).f*TOT;RK='';CH.forEach(c=>{const n=near(act(),c.ll);c.km=n.f*TOT;c.on=n.d<6000})}
+const a=act(),o=ea?R.P:R.A,rp=S.agent=='RE-PLANNING',key=R.id+':'+ea,f=S.pos/TOT;
+if(RK!=key){RK=key;[V.g,V.m,V.f].forEach(l=>l.setLatLngs(a.P));V.al.setLatLngs(o?o.P:[])}
+V.g.setStyle({opacity:rp?.04:.12});V.m.setStyle({opacity:rp?.35:1});V.f.setStyle({opacity:S.run&&!rp?.55:0});
+V.al.setStyle(rp?{color:'#00E5C7',opacity:.95,weight:4,dashArray:'2 8'}:{color:'#8aa0b3',opacity:.45,weight:3,dashArray:null});
+const sc=ch(S.sel||S.stop);V.hl.setLatLngs(sc&&sc.on?sub(a,f,sc.km/TOT):[]);
+const tf=S.tf&&S.traffic>0,tv=S.terrain>0;V.tr.setLatLngs(tf?sub(a,.25,.48):[]).setStyle({color:S.traffic>1?'#FF453A':'#FF7A18'});V.tv.setLatLngs(tv?sub(a,.62,.78):[]);
+lab(V.tt,tf,at(a,.365).ll,`${Math.round((1-TS[S.traffic])*100)}% SLOWER · SIMULATED`);lab(V.tl,tv,at(a,.7).ll,`+${EL[S.terrain]} m ${S.terrain>1?'CLIMB':'HILLS'}`,'#FFC857');
+CH.forEach(c=>{if(c.on){c.mk.setIcon(cicon(c));c.mk.addTo(MP)}else c.mk.remove()});
+MP.getContainer().classList.toggle('paused',!S.run);
+$('ban').innerHTML=(!S.net?'<div>OFFLINE MODE ACTIVE · Using last known charger data</div>':'')+(!S.link?'<div>VEHICLE LINK LOST · telemetry frozen</div>':'')+(FB?`<div style="color:var(--r)">${FB}</div>`:'')+`<div style="color:var(--t2)">REAL: imagery, roads, geometry (${R.real?'OSRM routing':'fallback corridor polyline'}) · SIMULATED: telemetry, traffic, chargers, AI</div>`;moveVeh()}
+function moveVeh(){if(!MP||!R.P||!V.vm)return;const c=calc(S),p=at(act(),S.pos/TOT);V.vm.setLatLng(p.ll);const e=V.vm._icon&&V.vm._icon.firstChild;if(e)e.style.transform=`rotate(${p.h}deg)`;
+V.rc.setLatLng(p.ll).setRadius(c.range*800).setStyle({color:c.arr<15?'#FF7A18':'#00E5C7',opacity:c.arr<15?.9:.25,fillOpacity:c.arr<15?.06:0});set('hd',fx(p.h));set('hs',fx(S.soc));set('fl',S.follow?'FOLLOWING VEHICLE':'FOLLOW PAUSED');
+if(S.follow&&S.tab=='journey'&&T%3==0&&Date.now()>(MP._fl||0))MP.panTo(p.ll,{animate:false});navTick()}
+function apply(P,Aa,meta){R={P:prep(P),A:Aa?prep(Aa):null,real:1,id:(R.id||0)+1,steps:meta.steps||[],stepsA:meta.stepsA||[]};TOT=Math.max(1,Math.round(R.P.t/1000));
+Object.assign(S,{pos:0,stop:null,res:null,alt:false,sel:null,wx:null,wxd:null,ag:{},rerr:'',run:false,trip:'planning',speed:Math.max(45,Math.min(105,Math.round(TOT/(meta.dur/3600))||82)),clock:nowMin()});PA=false;RK='';document.body.classList.remove('nr');V.vm.addTo(MP);V.rc.addTo(MP);
+MP.fitBounds(L.polyline(P).getBounds(),{padding:[90,90]});log('ROUTE SET · '+S.from.n+' → '+S.to.n+' · '+TOT+' km','k');render();loadChargers()}
+async function loadChargers(){CH.forEach(c=>c.mk&&c.mk.remove());CH=[];const n=Math.min(24,Math.max(6,Math.round(R.P.t/25000))),pts=Array.from({length:n+1},(_,i)=>at(R.P,i/n).ll),id=R.id;
+const q='[out:json][timeout:25];node(around:4000,'+pts.map(p=>p[0].toFixed(4)+','+p[1].toFixed(4)).join(',')+')[amenity=charging_station];out body 150;';
+try{const j=await(await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),signal:AbortSignal.timeout(30000)})).json();if(id!=R.id)return;
+let a=j.elements.map(e=>{const t=e.tags||{};let kw=Math.max(0,...Object.keys(t).filter(k=>/^socket:.*:output$/.test(k)).map(k=>parseFloat(t[k])||0));if(kw>1000)kw/=1000;const nr=near(R.P,[e.lat,e.lon]),h=e.id%97;
+return{id:'osm'+e.id,n:t.name||t.operator||t.brand||'EV charger',ll:[e.lat,e.lon],km:nr.f*TOT,sl:2+h%11,kw:kw||50,kwEst:!kw,pr:+(16+(h%5)*.5).toFixed(1),rel:85+h%12,av:true,on:nr.d<6000&&nr.f>.02}}).filter(c=>c.on).sort((x,y)=>x.km-y.km);
+if(a.length>24)a=a.filter((_,i)=>i%Math.ceil(a.length/24)==0);CH=a;CH.forEach(c=>{c.mk=L.marker(c.ll,{icon:cicon(c)}).bindPopup(()=>popup(c))});log(CH.length+' CHARGERS FOUND ON ROUTE · OpenStreetMap')}catch(e){log('CHARGER DATA UNAVAILABLE — '+e.message,'k')}RK='';render()}
+
+function initMap(){MP=L.map('lm',{zoomControl:false,zoomSnap:.5}).setView([12.9,78.5],8);L.control.zoom({position:'bottomright'}).addTo(MP);MP.createPane('lab').style.zIndex=250;setLayer(S.layer);
+const ln=o=>L.polyline([],{bubblingMouseEvents:false,interactive:false,...o}).addTo(MP);
+V.al=ln({color:'#8aa0b3',weight:3,interactive:true});V.al.on('click',()=>A.route(S.alt?'0':'1'));V.hl=ln({color:'#00E5C7',weight:10,opacity:.3});V.g=ln({color:'#00E5C7',weight:11,opacity:.18});V.m=ln({color:'#00E5C7',weight:5});V.tr=ln({weight:7,opacity:.85});V.tv=ln({color:'#FFC857',weight:7,opacity:.7});V.f=ln({color:'#E8FFFB',weight:2,dashArray:'1 16',lineCap:'round',className:'flow'});
+V.rc=L.circle([13,80],{radius:1e5,color:'#00E5C7',weight:1,dashArray:'4 6',fillOpacity:.04,interactive:false}).addTo(MP);
+V.vm=L.marker([13,80],{icon:L.divIcon({className:'',html:VI,iconSize:[34,34],iconAnchor:[17,17]}),zIndexOffset:1000,interactive:false}).addTo(MP);V.um=L.marker([0,0],{icon:L.divIcon({className:'',html:'<div style="width:16px;height:16px;border-radius:50%;background:#2f8cff;border:3px solid #fff;box-shadow:0 0 0 6px #2f8cff44"></div>',iconSize:[16,16],iconAnchor:[8,8]}),interactive:false});V.tt=L.marker([0,0],{interactive:false});V.tl=L.marker([0,0],{interactive:false});
+
+MP.on('dragstart',()=>{S.follow=false;set('fl','FOLLOW PAUSED')});
+MP.on('click',e=>{const p=e.latlng.lat.toFixed(4)+','+e.latlng.lng.toFixed(4);L.popup().setLatLng(e.latlng).setContent(`<div class="m u">${p}</div><button data-a="dst" data-v="${p}" style="margin-top:6px">SET AS DESTINATION</button>`).openOn(MP)});
+V.vm.remove();V.rc.remove();document.body.classList.add('nr')}
+
+// ---- places, location, routing (real data: Nominatim, OSRM, Overpass) ----
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),qi=$('q'),fi=$('from');let qt,GR=[],GT='to';
+const syncIn=()=>{fi.value=S.from?S.from.n:'';qi.value=S.to?S.to.n:'';if(MP&&V.um){S.from?V.um.setLatLng(S.from.ll).addTo(MP):V.um.remove()}};
+for(const [e,t] of [[fi,'from'],[qi,'to']]){e.addEventListener('input',()=>{GT=t;clearTimeout(qt);const v=e.value.trim();if(v.length<3){$('qs').innerHTML='';return}qt=setTimeout(()=>geo(v),500)});e.addEventListener('keydown',ev=>{if(ev.key=='Enter'){GT=t;clearTimeout(qt);geo(e.value.trim())}if(ev.key=='Escape')$('qs').innerHTML=''})}
+async function geo(v){if(v.length<2)return;$('qs').innerHTML='<button disabled>Searching…</button>';
+try{GR=await(await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=in&q='+encodeURIComponent(v),{signal:AbortSignal.timeout(8000)})).json();
+$('qs').innerHTML=GR.length?GR.map((r,i)=>`<button data-a="pick" data-v="${i}"><b>${esc(r.name||r.display_name.split(',')[0])}</b><small>${esc(r.display_name)}</small></button>`).join(''):'<button disabled>No places found</button>'}catch(e){$('qs').innerHTML='<button disabled>Search unavailable (offline?)</button>'}}
+async function rev(ll){try{const j=await(await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&lat=${ll[0]}&lon=${ll[1]}`,{signal:AbortSignal.timeout(8000)})).json();return(j.display_name||'Pinned location').split(',').slice(0,2).join(',').trim()}catch(e){return'Pinned location'}}
+function setPt(t,o){S[t]=o;syncIn();if(S.from&&S.to)planRoute();else if(t=='to'&&!S.from)getLoc(true);else render()}
+function getLoc(auto){if(!navigator.geolocation){S.rerr='Location is not available in this browser';render();return}S.rerr='';set('rmsg','Getting your location…');
+navigator.geolocation.getCurrentPosition(async p=>{const ll=[p.coords.latitude,p.coords.longitude],n=await rev(ll);S.from={n,ll,me:1};S.rerr='';syncIn();log('LOCATION FOUND · '+n+' (±'+Math.round(p.coords.accuracy)+' m)');MP.flyTo(ll,11,{duration:1.2});spot();if(S.to)planRoute();else render()},e=>{S.rerr='Location unavailable: '+e.message+(auto?' — type a starting point':'');render()},{enableHighAccuracy:true,timeout:15000})}
+async function spot(){try{S.spot=await api('/api/weather',{points:[S.from.ll]});log('WEATHER AT YOUR LOCATION · '+S.spot.summary)}catch(e){S.spot=null}render()}
+async function planRoute(){if(!S.from||!S.to)return;S.trip='routing';S.pre=null;S.rerr='';render();log('ROUTING · '+S.from.n+' → '+S.to.n);
+try{const f=S.from.ll,t=S.to.ll,j=await(await fetch(`https://router.project-osrm.org/route/v1/driving/${f[1]},${f[0]};${t[1]},${t[0]}?overview=full&geometries=geojson&alternatives=true&steps=true`,{signal:AbortSignal.timeout(20000)})).json();
+if(!j.routes||!j.routes.length)throw new Error(j.message||j.code||'no road route found');const g=r=>r.geometry.coordinates.map(c=>[c[1],c[0]]),sp=r=>r.legs.flatMap(l=>l.steps).map(x=>({len:x.distance,name:x.name,type:x.maneuver.type,mod:x.maneuver.modifier})),a=j.routes[0],b=j.routes[1];
+apply(g(a),b?g(b):null,{dur:a.duration,steps:sp(a),stepsA:b?sp(b):[]});precheck()}catch(e){S.trip='idle';S.rerr='Routing failed: '+e.message;log('ROUTING FAILED — '+e.message,'k');render()}}
+function clearTrip(){timers.forEach(clearTimeout);CH.forEach(c=>c.mk&&c.mk.remove());CH=[];['al','hl','g','m','tr','tv','f'].forEach(k=>V[k].setLatLngs([]));[V.tt,V.tl,V.vm,V.rc].forEach(l=>l.remove());R={};PA=false;RK='';
+Object.assign(S,{from:null,to:null,pos:0,run:false,trip:'idle',stop:null,res:null,alt:false,sel:null,pre:null,wx:null,wxd:null,ag:{},rerr:'',follow:false,ev:'ok',agent:'OBSERVING',spot:null});document.body.classList.add('nr');document.body.classList.remove('nav');$('tb').style.display='none';syncIn();log('TRIP CLEARED');render()}
+// ---- weather → energy model (documented adjustments, kWh/100 km) ----
+const wxPts=()=>Array.from({length:5},(_,i)=>at(act(),S.pos/TOT+i/4*(1-S.pos/TOT)).ll);
+function wxEnergy(){const w=S.wx;if(!w||!w.ok||!w.points.length||!R.P)return null;const ps=w.points,n=ps.length,P={t:0,r:0,w:0,n:0,d:0,e:0},el=[];let sf=1;
+ps.forEach((p,i)=>{const h=at(act(),S.pos/TOT+(n>1?i/(n-1):0)*(1-S.pos/TOT)).h,t=p.feels_c??p.temp_c??25,hw=(p.wind_kmh||0)*Math.cos(((p.wind_dir||0)-h)*rad),rain=Math.max(p.precip_mm||0,p.rain_mm||0);
+P.t+=Math.abs(t-22)*.06+Math.max(0,t-35)*.18;P.r+=rain>0?.3+Math.min(rain,5)*.2:0;P.w+=Math.max(-2,Math.min(2.5,hw*.04));P.n+=p.is_day===0?.2:0;P.d+=Math.max(-.3,Math.min(.3,((p.pressure_hpa||1013)-1013)*.003));
+if((p.visibility_km_min??99)<2)sf=Math.min(sf,.85);if([65,82,95,96,99].includes(p.code))sf=Math.min(sf,.9);if(p.elev_m!=null)el.push(p.elev_m)});
+for(const k in P)P[k]/=n;let up=0,dn=0;for(let i=1;i<el.length;i++){const d=el[i]-el[i-1];d>0?up+=d:dn-=d}P.e=(up-.6*dn)*.00545/Math.max(1,TOT-S.pos)*100;
+return{delta:P.t+P.r+P.w+P.n+P.d+P.e,parts:P,sf,temp:ps[0].temp_c??31,elev:ps[0].elev_m}}
+async function api(p,b){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b),signal:AbortSignal.timeout(90000)});if(!r.ok){let m=await r.text();try{m=JSON.parse(m).error||m}catch(e){}throw new Error(String(m).slice(0,160))}return r.json()}
+async function loadWx(quiet){if(location.protocol=='file:'){S.wx={ok:false,err:'backend not running — start server.py'};render();return}
+try{S.wx=await api('/api/weather',{points:wxPts()});S.wxd=wxEnergy();log((quiet?'WEATHER UPDATED AT VEHICLE · ':'WEATHER RETRIEVED · ')+S.wx.summary)}catch(e){S.wx={ok:false,err:e.message};S.wxd=null;log('WEATHER UNAVAILABLE — '+e.message,'k')}render()}
+const refreshWx=()=>loadWx(true);setInterval(()=>{if(S.trip=='active'&&S.run)refreshWx()},300000);
+// ---- pre-trip check: Open-Meteo + Tavily evidence, then Nemotron analyses it ----
+function snap(why){const c=calc(S),w=S.wx&&S.wx.ok?S.wx:null;return{reason:why,from:S.from&&S.from.n,dest:S.to&&S.to.n,position:R.P?at(act(),S.pos/TOT).ll:null,route_samples:R.P?wxPts():[],current_stop:S.stop,trip:S.trip,
+vehicle:{soc:+fx(S.soc,1),pos_km:+fx(S.pos,1),total_km:TOT,consumption:+fx(c.c,2),capacity_kwh:118,reserve_pct:8,arrival_soc:+fx(c.arr,1),range_km:+fx(c.range),eta_min_of_day:Math.round(c.eta)},
+sim:{traffic:S.traffic,note:'battery, traffic and charger availability are simulated'},weather:w?{summary:w.summary,at_vehicle:w.points[0],energy_delta_kwh_per_100km:S.wxd&&+fx(S.wxd.delta,2)}:null,
+chargers:CH.filter(h=>h.on&&h.km>S.pos).slice(0,12).map(h=>({id:h.id,name:h.n,ahead_km:+fx(h.km-S.pos,1),off_route_km:+fx(near(act(),h.ll).d/1000,1),kw:h.kw,power_assumed:!!h.kwEst,available:h.av,availability_source:'simulated',lat:+fx(h.ll[0],4),lon:+fx(h.ll[1],4)}))}}
+async function precheck(){const P=S.pre={steps:[],done:0},file=location.protocol=='file:',add=l=>{const x={l,st:'run',m:''};P.steps.push(x);render();return x},fin=(x,ok,m)=>{x.st=ok?'ok':'bd';x.m=m;render()};S.src=[];
+let x=add('Open-Meteo · weather at your location and along the route');
+try{if(file)throw new Error('backend not running — start server.py');S.wx=await api('/api/weather',{points:wxPts()});S.wxd=wxEnergy();fin(x,1,S.wx.summary);log('WEATHER RETRIEVED · '+S.wx.summary)}catch(e){S.wx={ok:false,err:e.message};S.wxd=null;fin(x,0,e.message)}
+const o=S.from.n,d=S.to.n,ev=[];
+for(const [l,q,topic] of [['Tavily · charger news',`EV charging stations ${d} ${o} highway chargers news out of service`,'news'],['Tavily · road conditions',`road closure accident traffic ${o} to ${d} today`,'news'],['Tavily · weather alerts',`weather warning alert ${d} ${o} today`,'news'],['Tavily · your current location',`${o} local news roads traffic weather today`,'general']]){x=add(l);
+try{if(file)throw new Error('backend not running');const r=await api('/api/search',{query:q,topic});ev.push({topic:l,query:q,results:r.results});fin(x,1,r.results.length+' sources found');log('TAVILY · '+l.split(' · ')[1].toUpperCase()+' → '+r.results.length+' results')}catch(e){ev.push({topic:l,query:q,error:e.message});fin(x,0,e.message)}}
+x=add('Nemotron · analysing route, weather, chargers and news');
+try{if(file)throw new Error('backend not running');const j=await api('/api/brief',{ctx:snap('pre-trip'),evidence:ev});if(!j.ok)throw new Error(j.error||'AI unavailable');P.brief=j.final;P.model=j.model;(j.steps||[]).forEach(t=>log('TOOL '+t.tool.toUpperCase()+' → '+t.summary));if(j.action)applyAgentAction(j.action);fin(x,1,'verdict: '+((j.final||{}).verdict||'n/a'));log('PRE-TRIP BRIEFING · '+((j.final||{}).verdict||'n/a').toUpperCase(),'k')}catch(e){fin(x,0,e.message);log('PRE-TRIP AI CHECK FAILED — '+e.message,'k')}
+if(S.pre!==P)return;P.done=1;S.trip='ready';render()}
+async function runAgent(why){if(S.ag.busy)return;if(location.protocol=='file:'||!R.P){S.ag={error:R.P?'backend not running — start server.py':'plan a route first',steps:[]};render();return}
+S.ag={busy:1,steps:[]};S.agent='ANALYZING';log('AGENT RUN STARTED · '+why,'k');render();
+try{const j=await api('/api/agent',snap(why));S.ag={...j,busy:0};(j.steps||[]).forEach(x=>log('TOOL '+x.tool.toUpperCase()+' → '+x.summary));
+if(j.ok){log('MODEL DECISION · '+((j.final||{}).selected_action||'keep_plan'));if(j.action)applyAgentAction(j.action)}else log('AGENT DEGRADED — '+j.error,'k')}
+catch(e){S.ag={busy:0,degraded:true,error:e.message,steps:[]};log('AGENT UNAVAILABLE — deterministic fallback active','k')}S.agent='OBSERVING';render()}
+function applyAgentAction(a){const h=ch(a.charger_id),as=h?S.soc-Math.max(0,h.km-S.pos)*calc(S).c/118:-1;
+if(!h||!h.on||!h.av||h.km<=S.pos||as<8){S.ag.rejected=true;log('AGENT PLAN UPDATE REJECTED BY VALIDATION','k');return}
+if(S.stop!==h.id){S.stop=h.id;S.sel=h.id;S.ev='risk';log('PLAN UPDATED BY AGENT · '+h.n);setTimeout(()=>focus(h.id,1),50)}}
+function agHTML(){const w=S.wx,g=S.ag||{},wd=S.wxd;let h='<div class="l">LIVE WEATHER · OPEN-METEO</div>';
+if(w&&w.ok){const p=w.points[0],pa=wd&&wd.parts;h+=`<div class="cc"><div class="m">${esc(w.summary)}</div><div class="m u">At vehicle: ${p.temp_c}°C (feels ${p.feels_c}°) · ${esc(p.condition)} · rain ${p.rain_mm??0} mm · wind ${p.wind_kmh} km/h from ${p.wind_dir}° (gusts ${p.gust_kmh}) · humidity ${p.humidity}% · cloud ${p.cloud}% · ${p.pressure_hpa} hPa · visibility ${p.visibility_km_min??'–'} km · UV ${p.uv_max??'–'} · elevation ${p.elev_m} m · ${p.is_day?'day':'night'} · sunrise ${esc((p.sunrise||'').slice(11))} sunset ${esc((p.sunset||'').slice(11))}</div>`+(pa?`<div class="m" style="color:var(--w)">ENERGY IMPACT ${wd.delta>=0?'+':''}${fx(wd.delta,2)} kWh/100 km</div><div class="m u">temp ${fx(pa.t,2)} · rain ${fx(pa.r,2)} · wind ${fx(pa.w,2)} · night ${fx(pa.n,2)} · pressure ${fx(pa.d,2)} · climb ${fx(pa.e,2)}${wd.sf<1?' · slower speed ×'+wd.sf:''}</div>`:'')+`<div class="m u">${w.points.slice(1).map((q,i)=>`Ahead ${i+1}: ${q.temp_c}°C · ${esc(q.condition)} · rain ${q.rain_prob_6h_max??'–'}%`).join('<br>')}<br>Live forecast, fetched ${esc(w.fetched||'')} — refreshed every 5 min during a trip.</div></div>`}
+else h+=`<div class="cc bad"><div class="m u">${w?'Weather unavailable: '+esc(w.err||''):'Waiting for route…'}</div></div>`;
+h+=`<div class="l">AI ANALYSIS</div><div class="cc"><div class="row" style="gap:6px"><button class="pri" data-a="agent" ${g.busy?'disabled':''}>${g.busy?'RUNNING…':'ANALYZE WITH AI'}</button><button class="sec" data-a="auto">AUTO: ${S.auto?'ON':'OFF'}</button></div>`;
+if(g.steps&&g.steps.length)h+=`<ol class="m u" style="margin:6px 0 0 16px">${g.steps.map(x=>`<li><b>${esc(x.tool)}</b> → ${esc(x.summary)}</li>`).join('')}</ol>`;
+if(g.ok&&g.final)h+=`<div style="margin-top:6px"><div class="m" style="color:var(--t)">DECISION · ${esc(g.final.selected_action||'keep_plan')}${g.final.charger_id?' · '+esc(g.final.charger_id):''}</div><p style="font-size:14px;margin:4px 0">${esc(g.final.situation_summary||'')}</p><div class="u">${esc(g.final.reason||'')}</div><div class="m u">Model ${esc(g.model)} · confidence ${esc(g.final.confidence||'n/a')}${g.rejected?' · plan update REJECTED by validation':''}</div>${(g.sources||[]).map(x=>`<div class="m u"><a href="${esc(x.url)}" target="_blank" rel="noopener" style="color:var(--t)">${esc(x.title||x.url)}</a></div>`).join('')}</div>`;
+else if(g.error)h+=`<div class="m" style="color:var(--w);margin-top:6px">AI UNAVAILABLE — ${esc(g.error)}<br>Deterministic fallback active (not Nemotron).</div>`;return h+'</div>'}
+// ---- turn-by-turn ----
+function navTick(){const b=$('tb');if(!(document.body.classList.contains('nav')&&S.trip=='active'&&R.P)){b.style.display='none';return}
+const c=calc(S),st=S.alt&&R.A?R.stepsA:R.steps,nc=(S.stop&&ch(S.stop))||CH.find(h=>h.on&&h.av&&h.km>S.pos);
+set('nbe',hm(c.eta));set('nbd',fx(c.rem));set('nba',fx(c.arr));set('nbb',fx(S.soc));set('nbs',fx(c.v)+' km/h');set('nbp',S.run?'❚❚ PAUSE':'▶ RESUME');set('nbc',nc?nc.n.slice(0,22)+' · '+(Math.max(0,nc.km-S.pos)|0)+' km':'none ahead');
+if(!st||!st.length){b.style.display='none';return}
+const tot=st.reduce((a,x)=>a+x.len,0),m=S.pos/TOT*tot;let acc=0,i=0;for(;i<st.length-1&&acc+st[i].len<=m;i++)acc+=st[i].len;
+const nx=st[i+1]||st[i],d=Math.max(0,acc+st[i].len-m),G={left:'↰','slight left':'↖','sharp left':'↰',right:'↱','slight right':'↗','sharp right':'↱',straight:'↑',uturn:'↶'};
+b.style.display='flex';$('tbi').textContent=nx.type=='arrive'?'⚑':(nx.type=='roundabout'||nx.type=='rotary')?'↻':G[nx.mod]||'↑';$('tbd').textContent=d>=1000?fx(d/1000,1)+' km':(Math.round(d/10)*10)+' m';
+$('tbn').textContent=nx.type=='arrive'?'Arrive at your destination':(nx.type=='depart'?'Head ':'')+(nx.mod?nx.mod[0].toUpperCase()+nx.mod.slice(1):'Continue')+(nx.name?' onto '+nx.name:'')}
+// ---- quick discussion with the AI ----
+function chatAdd(r,t){const d=document.createElement('div');d.className='bub '+r;d.textContent=t;$('cm').appendChild(d);$('cm').scrollTop=1e6;return d}
+async function chatSend(){const v=$('ci').value.trim();if(!v)return;$('ci').value='';chatAdd('u',v);S.chat=(S.chat||[]).concat({role:'user',content:v});const w=chatAdd('a','Thinking…');
+try{if(location.protocol=='file:')throw new Error('backend not running — start server.py');const j=await api('/api/chat',{message:v,history:S.chat.slice(-7,-1),ctx:snap('chat')});if(!j.ok)throw new Error(j.error||'AI unavailable');w.textContent=j.reply||'(no answer)';
+if(j.steps&&j.steps.length){const t=document.createElement('div');t.className='st';t.textContent='Tools: '+j.steps.map(x=>x.tool+' → '+x.summary).join(' · ');w.appendChild(t);j.steps.forEach(x=>log('CHAT TOOL '+x.tool.toUpperCase()+' → '+x.summary))}S.chat.push({role:'assistant',content:j.reply})}catch(e){w.textContent='AI unavailable — '+e.message;w.classList.add('bad')}}
+$('ci').addEventListener('keydown',e=>{if(e.key=='Enter')chatSend()});
+// ---- connection status (no boot screen): one silent check, shown in the System tab ----
+let HEALTH=null,LAT=null;
+async function health(){try{if(location.protocol=='file:')throw new Error('open via python server.py');const t=performance.now();HEALTH=await(await fetch('/api/health',{signal:AbortSignal.timeout(4000)})).json();LAT=Math.round(performance.now()-t);if(!HEALTH.llm_key||!HEALTH.tavily_key)log('API KEYS MISSING — add them in .env or on the System tab','k')}catch(e){HEALTH={ok:false,error:e.message};log('BACKEND NOT RUNNING — start server.py (weather, search and AI need it)','k')}render()}
+const keyForm=()=>HEALTH&&HEALTH.ok&&(!HEALTH.llm_key||!HEALTH.tavily_key)?`<h3>API KEYS</h3><div class="card" style="display:grid;gap:6px">${HEALTH.llm_key?'':'<input id="k1" class="ki" type="password" placeholder="NVIDIA API key (nvapi-…)" autocomplete="off">'}${HEALTH.tavily_key?'':'<input id="k2" class="ki" type="password" placeholder="Tavily API key (tvly-…)" autocomplete="off">'}<button class="pri" data-a="savekeys">SAVE</button><div class="m u">Saved only to the local .env next to server.py.</div></div>`:'';
+initMap();
+initMap();
+render();health();
+</script></body></html>
