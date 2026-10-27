@@ -244,9 +244,6 @@ Add the complete `LICENSE` file to the repository before describing the project 
 
 ## 👨‍💻 Project
 
-**SpectraX**  
-*Smarter EV journeys. Autonomous decisions. Zero range anxiety.*
-
 Built as an exploration of agentic AI, electric-vehicle journey intelligence, and adaptive travel planning.
 
 HOW TO RUN:-
